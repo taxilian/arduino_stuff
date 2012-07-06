@@ -3,6 +3,7 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <Wire.h>
+#include <LiquidCrystal.h>
 
 #define k_MODE_Open 0
 #define k_MODE_Pending 1
@@ -19,19 +20,26 @@ int serverPort=8001;
 // Initialize the Ethernet server library
 // with the IP address and port you want to use
 EthernetServer server(serverPort);
-
 I2C_eeprom ee(EEPROM_ID);
+LiquidCrystal lcd(9, 8, 6, 5, 3, 2);
 
 void setup()
 {
   // start the serial for debugging
   Serial.begin(115200);
-  Serial.println("Fetching DHCP address....");
+  // start the LCD
+  lcd.begin(16, 2);
+  
+  
   // start the Ethernet connection and the server:
+  Serial.println("Fetching DHCP address....");
+  lcd.print("Getting DHCP...");
   Ethernet.begin(mac);
   server.begin();
   Serial.print("server is at ");
   Serial.println(Ethernet.localIP());
+  lcd.clear();
+  lcd.print(Ethernet.localIP());
 }
 
 void print_mode(int mode) {

@@ -3,6 +3,7 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <Wire.h>
+#include <LiquidCrystal.h>
 
 #define k_MODE_Open 0
 #define k_MODE_Pending 1
@@ -22,8 +23,8 @@ int serverPort=8001;
 // Initialize the Ethernet server library
 // with the IP address and port you want to use
 EthernetServer server(serverPort);
-
 I2C_eeprom ee(EEPROM_ID);
+LiquidCrystal lcd(9, 8, 6, 5, 3, 2);
 
 byte buffer[k_BlockSize];
 
@@ -32,10 +33,18 @@ void setup()
   // start the serial for debugging
   Serial.begin(115200);
   
+  // start the LCD
+  lcd.begin(16, 2);
+  
   byte fCount = ee.readByte(k_FileCountAddr);
   Serial.print("Filesystem scanned; ");
   Serial.print((int)fCount);
   Serial.println(" files found");
+  
+  lcd.print("No Network");
+  lcd.setCursor(0, 1);
+  lcd.print((int)fCount);
+  lcd.print(" files found");
   
   for (byte n = 0; n < fCount; ++n) {
     // First read the file descriptor
