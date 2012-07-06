@@ -10,6 +10,7 @@
 #define k_BlockSize 32
 
 #define k_FileCountAddr 0
+#define k_FileDirAddr k_FileCountAddr+1
 
 const byte EEPROM_ID = 0x50;      // I2C address for 24LC256 EEPROM
 
@@ -38,7 +39,8 @@ void setup()
   
   for (byte n = 0; n < fCount; ++n) {
     // First read the file descriptor
-    int addr = k_FileCountAddr + (n * k_BlockSize);
+    int addr = k_FileDirAddr + (n * (k_BlockSize));
+    Serial.print("Reading from address: "); Serial.println(addr);
     ee.readBlock(addr, buffer, k_BlockSize);
     
     int fileAddr = *((int *)buffer);

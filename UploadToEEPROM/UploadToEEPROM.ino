@@ -26,6 +26,7 @@ void setup()
 {
   // start the serial for debugging
   Serial.begin(115200);
+  Serial.println("Fetching DHCP address....");
   // start the Ethernet connection and the server:
   Ethernet.begin(mac);
   server.begin();
@@ -65,7 +66,6 @@ void loop()
     String clientMsg ="";
     while (client.connected()) {
       if (client.available()) {
-        print_mode(mode);
         byte c = client.read();
         switch(mode) {
           case k_MODE_Open:
@@ -79,13 +79,13 @@ void loop()
             // This is where the interesting stuff happens
             if (bufferOffset < k_BlockSize) {
               // Store the new byte in the buffer
-              buffer[bufferOffset++] = c;
+              buffer[bufferOffset++ ] = c;
             } else {
               // Write the buffer and flush
               Serial.print("Writing block to eeprom: ");
               Serial.println(address);
               ee.writeBlock(address, buffer, bufferOffset);
-              address += bufferOffset;
+              address += bufferOffset+1;
               bufferOffset = 0;
             }
             break;
@@ -98,9 +98,10 @@ void loop()
       // data is not aligned on buffer boundaries; that's fine. Write whatever we have left
       Serial.println("Writing final buffer to eeprom");
       ee.writeBlock(address, buffer, bufferOffset);
-      address += bufferOffset;
+      address += bufferOffset+1;
       bufferOffset = 0;
     }
+    Serial.println("Done writing");
     // give the Client time to receive the data
     delay(1);
     // close the connection:
