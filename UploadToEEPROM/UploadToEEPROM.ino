@@ -1,9 +1,9 @@
-#include <I2C_eeprom.h>
 
 #include <SPI.h>
 #include <Ethernet.h>
 #include <Wire.h>
 #include <LiquidCrystal.h>
+#include <I2C_eeprom.h>
 
 #define k_MODE_Open 0
 #define k_MODE_Pending 1
@@ -65,10 +65,14 @@ int mode = 0;
 int address = 0;
 int bufferOffset = 0;
 
+void printBuffer(byte* buf, int len) {
+  for (int i = 0; i < len; ++i) {
+    Serial.write(buf[i]);
+  }
+}
+
 void loop()
 {
-  byte buffer[k_BlockSize] = { 0 };
-  // listen for incoming clients
   EthernetClient client = server.available();
   if (client) {
     String clientMsg ="";
@@ -81,33 +85,19 @@ void loop()
             else { Serial.print(c); }
             break;
           case k_MODE_Pending:
-            if (c == 'w') { mode = k_MODE_Writing; }
+            if (c == 'w') {
+              mode = k_MODE_Writing;
+              address = 0;
+            }
             break;
           case k_MODE_Writing:
-            // This is where the interesting stuff happens
-            if (bufferOffset < k_BlockSize) {
-              // Store the new byte in the buffer
-              buffer[bufferOffset++ ] = c;
-            } else {
-              // Write the buffer and flush
-              Serial.print("Writing block to eeprom: ");
-              Serial.println(address);
-              ee.writeBlock(address, buffer, bufferOffset);
-              address += bufferOffset+1;
-              bufferOffset = 0;
-            }
+            ee.writeByte(address++, c);
+            Serial.write(c);
             break;
           default:
             Serial.println("Unknown mode");
         }
       }
-    }
-    if (bufferOffset > 0) {
-      // data is not aligned on buffer boundaries; that's fine. Write whatever we have left
-      Serial.println("Writing final buffer to eeprom");
-      ee.writeBlock(address, buffer, bufferOffset);
-      address += bufferOffset+1;
-      bufferOffset = 0;
     }
     Serial.println("Done writing");
     // give the Client time to receive the data
